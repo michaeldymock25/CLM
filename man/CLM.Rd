@@ -1,8 +1,8 @@
-\name{CLM}
-\alias{CLM}
+\name{clm}
+\alias{clm}
 \title{Fits Conditional Logistic Models for Adaptive Trials}
 \usage{
-CLM(data,
+clm(data,
     T_follow,
     T_int,
     prior_sd,
@@ -36,5 +36,5 @@ CLM(data,
   The modelling specifications can be altered via the function's inputs. 
 }
 \examples{
-CLM(data, T_follow = c(5, 10, 15, 20), T_int = 30, prior_sd = 5)
+clm(data, T_follow = c(5, 10, 15, 20), T_int = 30, prior_sd = 5)
 }
