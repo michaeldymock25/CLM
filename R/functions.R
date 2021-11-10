@@ -97,9 +97,6 @@ discard <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8,
             iter_warmup = warmup_iter, 
             iter_sampling = sampling_iter)
   
-  
-  pis <- plogis(apply(beta_draws, 3, function(x) x))
-  
   beta_draws <- data.table(apply(fit$draws("beta"), 3, function(x) x))
   colnames(beta_draws) <- paste("beta", 1:J, sep = "_")
   
