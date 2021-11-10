@@ -95,7 +95,7 @@ clm <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, war
     print(p_all)
     print(p_arm)
   }
-  return(list(tab_beta = tab_beta, tab_pi = tab_pi, p_all = p_all, p_arm = p_arm))
+  return(list(tab_beta = tab_beta, tab_pi = tab_pi, p_all = p_all, p_arm = p_arm, pis = pis))
 }  
 
 discard <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, warmup_iter = 500, sampling_iter = 2000, n_cores = 1){
@@ -134,7 +134,7 @@ discard <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8,
                 xlab(expression(pi[j])) +
                 ylab("Density")
   if(plot_it) print(p_arm)
-  return(list(tab_beta = tab_beta, tab_pi = tab_pi, p_arm = p_arm))
+  return(list(tab_beta = tab_beta, tab_pi = tab_pi, p_arm = p_arm, pis = pis))
 }
 
 transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, rep_data_sets = 10, warmup_iter = 500, sampling_iter = 2000, n_cores = 1){
@@ -197,5 +197,5 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
                 xlab(expression(pi[j])) +
                 ylab("Density")
   if(plot_it) print(p_arm)
-  return(list(tab_beta = tab_beta, tab_pi = tab_pi, p_arm = p_arm))
+  return(list(tab_beta = tab_beta, tab_pi = tab_pi, p_arm = p_arm, pis = pis))
 }
