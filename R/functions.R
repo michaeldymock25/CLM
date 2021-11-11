@@ -171,7 +171,7 @@ summarise <- function(draws, clm = TRUE){
 plot_pis <- function(draws, type = "arm"){
   if(type == "arm"){
     dat_vis_arm <- data.frame(Arm = fct_inorder(rep(paste("Arm", 1:ncol(draws$pi_draws)), each = nrow(draws$pi_draws))),
-                              x = unlist(pi_draws))
+                              x = unlist(draws$pi_draws))
     p_arm <- ggplot(dat_vis_arm, aes(x = x)) + 
                 geom_freqpoly(bins = 25, aes(y = stat(count / sum(count)), colour = Arm), size = 1) +
                 scale_colour_manual("Arm", values = c("#000000", "#E69F00", "#56B4E9", "#009E73",
