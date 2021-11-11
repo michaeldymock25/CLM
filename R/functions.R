@@ -184,7 +184,7 @@ plot_pis <- function(draws, type = "arm"){
     dat_vis_all <- data.frame(Arm = fct_inorder(rep(paste("Arm", 1:ncol(draws$pi_draws)), 
                                                     each = nrow(draws$pi_tau_draws)*ncol(draws$pi_tau_draws)/ncol(draws$pi_draws))),
                               x = unlist(draws$pi_tau_draws),
-                              Time = fct_inorder(rep(rep(paste(T_follow[-length(T_follow)], "-", T_follow[-1]), 
+                              Time = fct_inorder(rep(rep(paste(c(0, T_follow)[-length(T_follow)], "-", c(0, T_follow)[-1]), 
                                                          each = nrow(draws$pi_tau_draws)), 
                                                      ncol(draws$pi_draws))))
     p_all <- ggplot(dat_vis_all, aes(x = x)) + 
