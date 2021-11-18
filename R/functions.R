@@ -16,7 +16,7 @@ ext_dat <- function(data, T_follow){
 
 agg_dat <- function(data, T_follow, T_int){
   out <- lapply(2:length(T_follow), function(t){
-                  temp <- data[t_enrol < T_int - T_follow[t]]
+                  temp <- data[t_rec < T_int - T_follow[t]]
                   for(tt in 1:(t-1)) temp <- temp[get(paste0("end_", T_follow[tt])) == 0]
                   temp[, .(n = .N, y = sum(get(paste0("end_", T_follow[t])))), keyby = arm]})
   return(out)
@@ -24,7 +24,7 @@ agg_dat <- function(data, T_follow, T_int){
 
 inc_dat <- function(data, T_follow, T_int){
   out <- lapply(2:(length(T_follow)-1), function(t){
-                  temp <- data[t_enrol < T_int - T_follow[t] & t_enrol > T_int - T_follow[t+1]]
+                  temp <- data[t_rec < T_int - T_follow[t] & t_rec > T_int - T_follow[t+1]]
                   for(tt in 1:(t-1)) temp <- temp[get(paste0("end_", T_follow[tt])) == 0]
                   temp[levels(arm), .N, by = .EACHI]})
   out <- Reduce(merge, out)[, -"arm"]
@@ -33,7 +33,7 @@ inc_dat <- function(data, T_follow, T_int){
 
 trans_agg_dat <- function(data, T_follow, T_int){
   out <- lapply(2:(length(T_follow)-1), function(t){
-                  temp <- data[t_enrol < T_int - T_follow[length(T_follow)]]
+                  temp <- data[t_rec < T_int - T_follow[length(T_follow)]]
                   for(tt in 1:(t-1)) temp <- temp[get(paste0("end_", T_follow[tt])) == 0]
                   temp[, .(n_star = .N, y_star = sum(get(paste0("end_", T_follow[length(T_follow)])))), keyby = arm]})
   return(out)
