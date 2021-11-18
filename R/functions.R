@@ -1,9 +1,9 @@
-gen_data <- function(n, arms, probs, T_trial, T_follow_final){
+gen_data <- function(n, arms, probs, T_rec, T_end){
   if(!is.character(arms)) arms <- as.character(arms)
-  out <- data.table(t_enrol = runif(n = n, min = 0, max = T_trial),
+  out <- data.table(t_rec = runif(n = n, min = 0, max = T_rec),
                     arm = factor(sample(x = arms, size = n, replace = TRUE), levels = arms))
   out[, y := rbinom(n = n, size = 1, prob = probs[arm])]
-  out[, t_obs := ifelse(y == 1, runif(n = n, min = 0, max = T_follow_final), NA)]
+  out[, t_obs := ifelse(y == 1, runif(n = n, min = 0, max = T_end), NA)]
   return(out)
 }
 
