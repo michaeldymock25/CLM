@@ -194,16 +194,18 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
 
 summ_fun <- function(draws) c(mean = mean(draws), median = median(draws), sd = sd(draws), quantile(draws, c(0.05, 0.95)))
 
-summarise <- function(draws, clm = TRUE){
+summarise <- function(draws, model = "CLM"){
   J <- ncol(draws$pi_draws) - 1
+  rem <- "interim"
   tab_pi <- rbindlist(lapply(1:length(unique(draws$pi_draws$interim)), function(int) 
-                          as.data.table(cbind(par = paste("pi", 1:J, sep = "_"), t(apply(draws$pi_draws[interim == interim, -"interim"], 2, summ_fun))))), 
+                          as.data.table(cbind(par = paste("pi", 1:J, sep = "_"), t(apply(draws$pi_draws[interim == interim, -..rem], 2, summ_fun))))), 
                       idcol = "interim")
+  if(model == "transition") rem <- c("rep", rem)
   tab_beta <- rbindlist(lapply(1:length(unique(draws$beta_draws$interim)), function(int) 
                             as.data.table(cbind(par = paste("beta", 1:J, sep = "_"), 
-                                                t(apply(draws$beta_draws[interim == interim, -c("rep", "interim")], 2, summ_fun))))), 
+                                                t(apply(draws$beta_draws[interim == interim, -..rem], 2, summ_fun))))), 
                         idcol = "interim")
-  if(clm){
+  if(model == "CLM"){
     tab_pi_t <- rbindlist(lapply(1:length(unique(draws$pi_t_draws$interim)), function(int) 
                               as.data.table(cbind(par = paste("pi", as.vector(outer(1:((ncol(draws$pi_t_draws) - 1)/J), 1:J, FUN = "paste", sep = "_")), sep = "_"), 
                                                   t(apply(draws$pi_t_draws[interim == interim, -"interim"], 2, summ_fun))))), 
