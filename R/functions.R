@@ -59,7 +59,7 @@ clm <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, war
                      n = sapply(data_agg[[as.character(T_int[t])]], function(x) x$n), 
                      y = sapply(data_agg[[as.character(T_int[t])]], function(x) x$y), 
                      prior_sd = prior_sd)
-    cat("Running interim", t)
+    cat("Running interim", t, "\n")
     drp <- utils::capture.output(fit <- stan_mod$sample(
       data = mod_data,
       chains = chains,
@@ -105,7 +105,7 @@ discard <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8,
                     n = as.vector(table(data_tmp$arm)),
                     y = unlist(data_tmp[, sum(y), keyby = arm][, -"arm"]),
                     prior_sd = prior_sd)
-    cat("Running interim", t)
+    cat("Running interim", t, "\n")
     drp <- utils::capture.output(fit <- stan_mod$sample(
       data = mod_data,
       chains = chains,
@@ -154,7 +154,7 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
                      n_star = as.matrix(n_star), 
                      y_star = as.matrix(y_star),
                      prior_sd = prior_sd)
-    cat("Running interim", t)
+    cat("Running interim", t, "\n")
     drp <- utils::capture.output(fit <- stan_mod$sample(
       data = mod_data,
       chains = max(chains, rep_data_sets),
