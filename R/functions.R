@@ -205,7 +205,7 @@ summarise <- function(draws, clm = TRUE){
                         idcol = "interim")
   if(clm){
     tab_pi_t <- rbindlist(lapply(1:length(unique(draws$pi_t_draws$interim)), function(int) 
-                              as.data.table(cbind(par = paste("pi", as.vector(outer(1:((ncol(pi_t_draws) - 1)/J), 1:J, FUN = "paste", sep = "_")), sep = "_"), 
+                              as.data.table(cbind(par = paste("pi", as.vector(outer(1:((ncol(draws$pi_t_draws) - 1)/J), 1:J, FUN = "paste", sep = "_")), sep = "_"), 
                                                   t(apply(draws$pi_t_draws[interim == interim, -"interim"], 2, summ_fun))))), 
                           idcol = "interim")
     return(list(tab_pi = tab_pi, tab_pi_t = tab_pi_t, tab_beta = tab_beta))
