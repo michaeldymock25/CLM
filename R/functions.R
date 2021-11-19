@@ -59,13 +59,14 @@ clm <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, war
                      n = sapply(data_agg[[as.character(T_int[t])]], function(x) x$n), 
                      y = sapply(data_agg[[as.character(T_int[t])]], function(x) x$y), 
                      prior_sd = prior_sd)
-    fit <- stan_mod$sample(
+    cat("Running interim", t)
+    drp <- utils::capture.output(fit <- stan_mod$sample(
       data = mod_data,
       chains = chains,
       parallel_chains = min(chains, n_cores),
       refresh = 0,
       iter_warmup = warmup_iter, 
-      iter_sampling = sampling_iter)
+      iter_sampling = sampling_iter))
     
     beta_draws <- data.table(apply(fit$draws("beta"), 3, function(x) x))
     colnames(beta_draws) <- paste("beta", as.vector(outer(1:(length(T_follow)-1), 1:J, FUN = "paste", sep = "_")), sep = "_")
@@ -86,7 +87,7 @@ clm <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, war
   pi_t_draws <- rbindlist(pi_t_draws_list, idcol = "interim")
   pi_draws <- rbindlist(pi_draws_list, idcol = "interim")
   
-  return(list(beta_draws = beta_draws, pi_tau_draws = pi_tau_draws, pi_draws = pi_draws))
+  return(list(beta_draws = beta_draws, pi_t_draws = pi_t_draws, pi_draws = pi_draws))
 }  
 
 discard <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8, warmup_iter = 500, sampling_iter = 2000, n_cores = 1){
@@ -104,13 +105,14 @@ discard <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains = 8,
                     n = as.vector(table(data_tmp$arm)),
                     y = unlist(data_tmp[, sum(y), keyby = arm][, -"arm"]),
                     prior_sd = prior_sd)
-    fit <- stan_mod$sample(
+    cat("Running interim", t)
+    drp <- utils::capture.output(fit <- stan_mod$sample(
       data = mod_data,
       chains = chains,
       parallel_chains = min(chains, n_cores),
       refresh = 0,
       iter_warmup = warmup_iter, 
-      iter_sampling = sampling_iter)
+      iter_sampling = sampling_iter))
   
     beta_draws <- data.table(apply(fit$draws("beta"), 3, function(x) x))
     colnames(beta_draws) <- paste("beta", 1:J, sep = "_")
@@ -152,13 +154,14 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
                      n_star = as.matrix(n_star), 
                      y_star = as.matrix(y_star),
                      prior_sd = prior_sd)
-    fit <- stan_mod$sample(
+    cat("Running interim", t)
+    drp <- utils::capture.output(fit <- stan_mod$sample(
       data = mod_data,
       chains = max(chains, rep_data_sets),
       parallel_chains = min(chains, n_cores),
       refresh = 0,
       iter_warmup = max(warmup_iter, 1000), 
-      iter_sampling = 1)
+      iter_sampling = 1))
     y_inc_sum_draws <- fit$draws("y_inc_sum")
     y_inc_sum_draws <- apply(y_inc_sum_draws, 3, function(x) x)
     data_tmp <- data[t_rec + T_follow[length(T_follow)] < T_int[t]]
@@ -168,13 +171,13 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
                                              n = as.vector(table(data_tmp$arm) + rowSums(n_inc[[as.character(T_int[t])]])),
                                              y = unlist(data_tmp[levels(arm), sum(y), by = .EACHI][,-"arm"]) + y_inc_sum_draws[i,],
                                              prior_sd = prior_sd)
-                            fit <- discard_mod$sample(
+                            drp <- utils::capture.output(fit <- discard_mod$sample(
                                                       data = mod_data,
                                                       chains = chains,
                                                       parallel_chains = min(chains, n_cores),
                                                       refresh = 0,
                                                       iter_warmup = warmup_iter, 
-                                                      iter_sampling = sampling_iter)
+                                                      iter_sampling = sampling_iter))
                             data.table(apply(fit$draws("beta"), 3, function(x) x))}), idcol = "rep")
     colnames(beta_draws) <- c("rep", paste("beta", 1:J, sep = "_"))
     pi_draws <- beta_draws[, lapply(.SD, plogis), .SDcols = paste("beta", 1:J, sep = "_")]
@@ -240,3 +243,4 @@ plot_pis <- function(draws, T_follow, type = "arm"){
     stop("type must be either 'arm' or 'all'")
   }
 }
+
