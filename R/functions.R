@@ -198,16 +198,16 @@ summarise <- function(draws, model = "CLM"){
   J <- ncol(draws$pi_draws) - 1
   rem <- "interim"
   tab_pi <- rbindlist(lapply(1:length(unique(draws$pi_draws$interim)), function(int) 
-                          data.table(par = paste("pi", 1:J, sep = "_"), t(apply(draws$pi_draws[interim == interim, -..rem], 2, summ_fun)))), 
+                          data.table(par = paste("pi", 1:J, sep = "_"), t(apply(draws$pi_draws[interim == int, -..rem], 2, summ_fun)))), 
                       idcol = "interim")
   if(model == "transition") rem <- c("rep", rem)
   tab_beta <- rbindlist(lapply(1:length(unique(draws$beta_draws$interim)), function(int) 
-                            data.table(par = paste("beta", 1:J, sep = "_"), t(apply(draws$beta_draws[interim == interim, -..rem], 2, summ_fun)))), 
+                            data.table(par = paste("beta", 1:J, sep = "_"), t(apply(draws$beta_draws[interim == int, -..rem], 2, summ_fun)))), 
                         idcol = "interim")
   if(model == "CLM"){
     tab_pi_t <- rbindlist(lapply(1:length(unique(draws$pi_t_draws$interim)), function(int) 
                               data.table(par = paste("pi", as.vector(outer(1:((ncol(draws$pi_t_draws) - 1)/J), 1:J, FUN = "paste", sep = "_")), sep = "_"), 
-                                         t(apply(draws$pi_t_draws[interim == interim, -"interim"], 2, summ_fun)))), 
+                                         t(apply(draws$pi_t_draws[interim == int, -"interim"], 2, summ_fun)))), 
                           idcol = "interim")
     return(list(tab_pi = tab_pi, tab_pi_t = tab_pi_t, tab_beta = tab_beta))
   } else {return(list(tab_pi = tab_pi, tab_beta = tab_beta))}
