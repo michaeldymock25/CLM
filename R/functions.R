@@ -18,6 +18,7 @@ ext_dat <- function(data, T_follow){
 agg_dat <- function(data, T_follow, T_int){
   out <- lapply(2:length(T_follow), function(t){
     temp <- data[t_rec < T_int - T_follow[t]]
+    if(nrow(temp) == 0) return(data.table(arm = 1:J, n = 0, y = 0))
     for(tt in 1:(t-1)) temp <- temp[get(paste0("end_", T_follow[tt])) == 0]
     temp[, .(n = .N, y = sum(get(paste0("end_", T_follow[t])))), keyby = arm]})
   return(out)
