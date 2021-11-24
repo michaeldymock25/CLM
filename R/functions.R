@@ -24,13 +24,12 @@ agg_dat <- function(data, T_follow, T_int){
   return(out)
 }
 
-inc_dat <- function(data, T_follow, T_int){
+inc_dat <- function(data, J, T_follow, T_int){
   out <- lapply(2:(length(T_follow)-1), function(t){
     temp <- data[t_rec < T_int - T_follow[t] & t_rec > T_int - T_follow[t+1]]
     for(tt in 1:(t-1)) temp <- temp[get(paste0("end_", T_follow[tt])) == 0]
-    temp[levels(arm), .N, by = .EACHI]})
-  out <- Reduce(merge, out)[, -"arm"]
-  return(out)
+    temp[levels(arm), .N, by = .EACHI][-,"arm"]})
+  return(matrix(unlist(out), nrow = J))
 }
 
 trans_agg_dat <- function(data, T_follow, T_int){
@@ -138,7 +137,7 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
   
   setkey(data, arm)
   
-  n_inc <- lapply(T_int, function(t_int) inc_dat(data, T_follow, T_int = t_int))
+  n_inc <- lapply(T_int, function(t_int) inc_dat(data, J = J, T_follow, T_int = t_int))
   names(n_inc) <- T_int
   
   out_inc <- lapply(T_int, function(t_int) trans_agg_dat(data, T_follow, T_int = t_int))
@@ -151,7 +150,7 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
     y_star <- sapply(out_inc[[as.character(T_int[t])]], function(x) x[,y_star])
     mod_data <- list(J = J, 
                      `T` = length(T_follow) - 1,
-                     n_inc = as.matrix(n_inc[[as.character(T_int[t])]]), 
+                     n_inc = n_inc[t], 
                      n_star = as.matrix(n_star), 
                      y_star = as.matrix(y_star),
                      prior_sd = prior_sd)
@@ -245,4 +244,5 @@ plot_pis <- function(draws, T_follow, type = "arm"){
     stop("type must be either 'arm' or 'all'")
   }
 }
+
 
