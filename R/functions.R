@@ -150,7 +150,7 @@ transition <- function(data, T_follow, T_int, prior_sd, plot_it = TRUE, chains =
     y_star <- sapply(out_inc[[as.character(T_int[t])]], function(x) x[,y_star])
     mod_data <- list(J = J, 
                      `T` = length(T_follow) - 1,
-                     n_inc = n_inc[t], 
+                     n_inc = n_inc[[t]], 
                      n_star = as.matrix(n_star), 
                      y_star = as.matrix(y_star),
                      prior_sd = prior_sd)
