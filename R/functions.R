@@ -28,7 +28,7 @@ inc_dat <- function(data, J, T_follow, T_int){
   out <- lapply(2:(length(T_follow)-1), function(t){
     temp <- data[t_rec < T_int - T_follow[t] & t_rec > T_int - T_follow[t+1]]
     for(tt in 1:(t-1)) temp <- temp[get(paste0("end_", T_follow[tt])) == 0]
-    temp[levels(arm), .N, by = .EACHI][-,"arm"]})
+    temp[levels(arm), .N, by = .EACHI][,-"arm"]})
   return(matrix(unlist(out), nrow = J))
 }
 
