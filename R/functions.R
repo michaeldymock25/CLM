@@ -229,7 +229,7 @@ plot_pis <- function(draws, T_follow, type = "arm"){
     dat_vis_all <- data.frame(Arm = fct_inorder(rep(paste("Arm", 1:(ncol(draws$pi_draws)-1)), 
                                                     each = nrow(draws$pi_t_draws)*(ncol(draws$pi_t_draws)-1)/(ncol(draws$pi_draws)-1))),
                               x = unlist(draws$pi_t_draws[,-"interim"]),
-                              Time = fct_inorder(rep(rep(paste(c(0, T_follow)[-length(T_follow)], "-", c(0, T_follow)[-1]), 
+                              Time = fct_inorder(rep(rep(paste(c(0, T_follow)[-(length(T_follow)+1)], "-", c(0, T_follow)[-1]), 
                                                          each = nrow(draws$pi_t_draws)), 
                                                      (ncol(draws$pi_draws)-1))))
     p_all <- ggplot(dat_vis_all, aes(x = x)) + 
