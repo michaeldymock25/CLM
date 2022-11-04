@@ -1,4 +1,3 @@
-
 gen_data <- function(n, arms, probs, T_rec, T_end){
   if(!is.character(arms)) arms <- as.character(arms)
   out <- data.table(t_rec = runif(n = n, min = 0, max = T_rec),
