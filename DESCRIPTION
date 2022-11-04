@@ -1,5 +1,5 @@
 Package: CLM
-Title: Fits conditional logistic models for adaptive trials
+Title: Fits the conditional logistic model
 Version: 0.0.0.9000
 Authors@R: 
     person("Michael", "Dymock", , "michael.dymock@telethonkids.org.au", role = c("aut", "cre"),
