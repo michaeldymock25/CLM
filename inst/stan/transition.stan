@@ -3,7 +3,8 @@ data{
   int<lower=2> T;             // number of follow up times 
   int<lower=0> n_inc[J,T-1];  // number of individuals with incomplete observations
   int<lower=0> n_star[J,T-1]; // number of completed individuals that had not observed the endpoint at time tau     
-  int y_star[J,T-1];          // outcomes of completed individuals that had not observed the endpoint at time tau    
+  int y_star[J,T-1];          // outcomes of completed individuals that had not observed the endpoint at time tau   
+  real prior_mean;            // prior mean for coefficients
   real prior_sd;              // prior standard deviation for coefficients
 }
 
@@ -18,7 +19,7 @@ transformed parameters{
 model{
   for(t in 1:(T-1)){
     y_star[,t] ~ binomial_logit(n_star[,t], beta_star[t]);
-    beta_star[t] ~ normal(0, prior_sd);
+    beta_star[t] ~ normal(prior_mean, prior_sd);
   }
 }
 
