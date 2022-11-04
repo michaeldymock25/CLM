@@ -3,6 +3,7 @@ data{
   int<lower=1> T;            // number of follow up times
   int<lower=0> n[J,T];       // number of individuals on each arm at each follow up 
   int y[J,T];                // outcomes on each arm at each follow up
+  real prior_mean;           // prior mean for coefficients
   real prior_sd;             // prior standard deviation for coefficients
 }
 
@@ -13,6 +14,6 @@ parameters{
 model{
   for(t in 1:T){
     y[,t] ~ binomial_logit(n[,t], beta[t]);
-    beta[t] ~ normal(0, prior_sd);
+    beta[t] ~ normal(prior_mean, prior_sd);
   }
 }
