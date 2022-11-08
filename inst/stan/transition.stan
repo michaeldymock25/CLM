@@ -1,15 +1,15 @@
 data{
   int<lower=1> J;             // number of trial arms
   int<lower=2> T;             // number of follow up times 
-  int<lower=0> n_inc[J,T-1];  // number of individuals with incomplete observations
-  int<lower=0> n_star[J,T-1]; // number of completed individuals that had not observed the endpoint at time tau     
-  int y_star[J,T-1];          // outcomes of completed individuals that had not observed the endpoint at time tau   
+  int<lower=0> n_inc[J,T-1];  // number of participants with incomplete observations
+  int<lower=0> n_star[J,T-1]; // number of completed participants that had not observed the endpoint at time tau     
+  int y_star[J,T-1];          // outcomes of completed participants that had not observed the endpoint at time tau   
   real prior_mean;            // prior mean for coefficients
   real prior_sd;              // prior standard deviation for coefficients
 }
 
 parameters{
-  vector[J] beta_star[T-1];     // coefficients for transition probabilities
+  vector[J] beta_star[T-1];   // coefficients for transition probabilities
 }
 
 transformed parameters{
