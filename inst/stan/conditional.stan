@@ -1,8 +1,8 @@
 data{
   int<lower=1> J;            // number of trial arms
   int<lower=1> T;            // number of follow up times
-  int<lower=0> n[J,T];       // number of participants on each arm at each follow up 
-  int y[J,T];                // outcomes on each arm at each follow up
+  int<lower=0> n[J,T];       // number of participants on each arm at each follow up that have not yet reached the endpoint
+  int y[J,T];                // outcomes on each arm at each follow up for participants that have not yet reached the endpoint
   real prior_mean;           // prior mean for coefficients
   real prior_sd;             // prior standard deviation for coefficients
 }
