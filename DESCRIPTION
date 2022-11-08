@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Michael", "Dymock", , "michael.dymock@telethonkids.org.au", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0000-0003-4881-2860"))
-Description: Fits conditional logistic models to data where individuals have potentially incomplete time series at the time of the interim analysis for adaptive trials.
+Description: Fits conditional logistic models to data where participants may have incomplete time series where the endpoint is binary with an absorbing state.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
