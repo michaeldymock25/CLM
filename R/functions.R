@@ -78,7 +78,7 @@ agg_conditional <- function(J, dat, follow_up_times, analysis_time){
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
 conditional_analysis <- function(J, follow_up_times, n, y, prior_mean, prior_sd, ...){
-  if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(stan_file = system.file("stan", "conditonal.stan", package = "CLM"))
+  if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(stan_file = system.file("stan", "conditional.stan", package = "CLM"))
   mod_data <- list(J = J,
                    `T` = length(follow_up_times),
                    n = n,
@@ -164,7 +164,7 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
 transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_q, prior_mean, prior_sd, nsets = 10, ...){
-  if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(stan_file = system.file("stan", "conditonal.stan", package = "CLM"))
+  if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(stan_file = system.file("stan", "conditional.stan", package = "CLM"))
   if(!exists("logistic_mod")) logistic_mod <- cmdstan_model(stan_file = system.file("stan", "logistic.stan", package = "CLM"))
   mod_data <- list(J = J,
                    `T` = length(follow_up_times),
