@@ -70,7 +70,6 @@ agg_conditional <- function(J, dat, follow_up_times, analysis_time){
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
 #          ... = additional optional parameters for modelling
-# loads conditional model if required
 # sets up data required for conditional model
 # samples from conditional model
 # transforms beta parameter estimates to pi_t parameter estimates
@@ -78,14 +77,13 @@ agg_conditional <- function(J, dat, follow_up_times, analysis_time){
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
 conditional_analysis <- function(J, follow_up_times, n, y, prior_mean, prior_sd, ...){
-  conditional_mod <- cmdstan_model(stan_file = system.file("stan", "conditional.stan", package = "CLM"))
   mod_data <- list(J = J,
                    `T` = length(follow_up_times),
                    n = n,
                    y = y,
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
-  drp <- utils::capture.output(fit <- conditional_mod$sample(data = mod_data, refresh = 0, ...))
+  drp <- utils::capture.output(fit <- stanmodels$conditional$sample(data = mod_data, refresh = 0, ...))
 
   beta_draws <- data.table(posterior::as_draws_matrix(fit$draws("beta")))
   colnames(beta_draws) <- paste("beta", as.vector(outer(1:length(follow_up_times), 1:J, FUN = "paste", sep = "_")), sep = "_")
@@ -115,20 +113,18 @@ conditional_analysis <- function(J, follow_up_times, n, y, prior_mean, prior_sd,
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
 #          ... = additional optional parameters for modelling
-# loads logistic model if required
 # sets up data required for logistic model
 # samples from logistic model
 # transforms beta parameter estimates to pi parameter estimates
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
 logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
-  logistic_mod <- cmdstan_model(stan_file = system.file("stan", "logistic.stan", package = "CLM"))
   mod_data <- list(J = J,
                    n = as.vector(dat[, table(arm)]),
                    y = as.vector(dat[event == 1, table(arm)]),
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
-  drp <- utils::capture.output(fit <- logistic_mod$sample(data = mod_data, refresh = 0, ...))
+  drp <- utils::capture.output(fit <- stanmodels$logistic$sample(data = mod_data, refresh = 0, ...))
 
   beta_draws <- data.table(posterior::as_draws_matrix(fit$draws("beta")))
   colnames(beta_draws) <- paste("beta", 1:J, sep = "_")
@@ -154,7 +150,6 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
 #          prior_sd = standard deviation for the prior distribution on beta
 #          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
 #          ... = additional optional parameters for modelling
-# loads conditional model and logistic model if required
 # sets up data required for conditional model
 # samples from conditional model (equal to the number of sets to be produced)
 # transforms beta parameter estimates to pi_t parameter estimates
@@ -164,15 +159,13 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
 transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_q, prior_mean, prior_sd, nsets = 10, ...){
-  conditional_mod <- cmdstan_model(stan_file = system.file("stan", "conditional.stan", package = "CLM"))
-  logistic_mod <- cmdstan_model(stan_file = system.file("stan", "logistic.stan", package = "CLM"))
   mod_data <- list(J = J,
                    `T` = length(follow_up_times),
                    n = n,
                    y = y,
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
-  drp <- utils::capture.output(fit <- conditional_mod$sample(data = mod_data, refresh = 0, chains = nsets, iter_sampling = 1))
+  drp <- utils::capture.output(fit <- stanmodels$conditional$sample(data = mod_data, refresh = 0, chains = nsets, iter_sampling = 1))
 
   beta_draws <- data.table(posterior::as_draws_matrix(fit$draws("beta")))
   colnames(beta_draws) <- paste("beta", as.vector(outer(1:length(follow_up_times), 1:J, FUN = "paste", sep = "_")), sep = "_")
@@ -203,7 +196,7 @@ transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_
                                              y = pred[set == i]$y,
                                              prior_mean = prior_mean,
                                              prior_sd = prior_sd)
-                            drp <- utils::capture.output(fit <- logistic_mod$sample(data = mod_data, refresh = 0, ...))
+                            drp <- utils::capture.output(fit <- stanmodels$logistic$sample(data = mod_data, refresh = 0, ...))
                             data.table(posterior::as_draws_matrix(fit$draws("beta")))}))
   colnames(beta_draws) <- paste("beta", 1:J, sep = "_")
   pi_draws <- beta_draws[, lapply(.SD, plogis), .SDcols = paste("beta", 1:J, sep = "_")]
