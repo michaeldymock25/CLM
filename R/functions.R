@@ -265,26 +265,35 @@ run_trial <- function(J, dat, follow_up_times, analysis_times, model = "conditio
 #          endpoint_time = number of days between randomisation and the time the endpoint is collected#          J = number of trial arms
 #          follow_up_times = vector of follow up times in days (must include endpoint_time as the final follow up)
 #          analysis_times = vector of analysis times in days (first must be later than endpoint_time)
-#          model = one of "conditional", "logistic" or "transition" (defaults to "conditional")
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
 #          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
 #          ... = additional optional parameters for modelling
 # generates nsim data sets
-# for each data set runs a trial as specified
+# sets up data.table to contain run times for each model
+# for each data set runs a trial using each model as specified
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
 simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times,
-                            model = "conditional", prior_mean, prior_sd, nsets = 10, ...){
+                            prior_mean, prior_sd, nsets = 10, ...){
+  models <- c("conditional", "logistic", "transition")
   dat <- lapply(1:nsim, function(i) gen_data(n = n, J = J, p = p, recruit_period = recruit_period,
                                              endpoint_time = endpoint_time, follow_up_times = follow_up_times))
-  start_time <- Sys.time()
-  out <- parallel::mclapply(dat, function(d)
-                       run_trial(J = J, dat = d, follow_up_times = follow_up_times, analysis_times = analysis_times,
-                                 model = model, prior_mean = prior_mean, prior_sd = prior_sd, nsets = nsets, ...),
-                            mc.cores = num_cores)
-  start_time <- Sys.time()
-  beta <- rbindlist(out$beta_draws, idcol = "sim")
-  pi <- rbindlist(out$pi_draws, idcol = "sim")
-  return(list(beta = beta, pi = pi, run_time = end_time - start_time))
+  run_time <- data.table(model = models, time = NA_real_)
+  pi_draws_list <- beta_draws_list <- list()
+  for(mod in c("conditional", "logistic", "transition")){
+    start_time <- Sys.time()
+    out <- parallel::mclapply(dat, function(d)
+                         run_trial(J = J, dat = d, follow_up_times = follow_up_times, analysis_times = analysis_times,
+                                   model = mod, prior_mean = prior_mean, prior_sd = prior_sd, nsets = nsets, ...),
+                              mc.cores = num_cores)
+    end_time <- Sys.time()
+    run_times[model == mod, time := end_time - start_time]
+    beta_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$beta_draws), idcol = "sim")
+    pi_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$pi_draws), idcol = "sim")
+  }
+
+  beta <- rbindlist(beta_draws_list, idcol = "model")
+  pi <- rbindlist(pi_draws_list, idcol = "model")
+  return(list(beta = beta, pi = pi, run_time = run_time))
 }
