@@ -77,6 +77,8 @@ agg_conditional <- function(J, dat, follow_up_times, analysis_time){
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
 conditional_analysis <- function(J, follow_up_times, n, y, prior_mean, prior_sd, ...){
+  if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(write_stan_file(readLines(url(
+                                                       "https://raw.githubusercontent.com/michaeldymock25/CLM/main/inst/stan/conditional.stan"))))
   mod_data <- list(J = J,
                    `T` = length(follow_up_times),
                    n = n,
@@ -119,6 +121,8 @@ conditional_analysis <- function(J, follow_up_times, n, y, prior_mean, prior_sd,
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
 logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
+  if(!exists("logistic_mod")) logistic_mod <- cmdstan_model(write_stan_file(readLines(url(
+                                                 "https://raw.githubusercontent.com/michaeldymock25/CLM/main/inst/stan/logistic.stan"))))
   mod_data <- list(J = J,
                    n = as.vector(dat[, table(arm)]),
                    y = as.vector(dat[event == 1, table(arm)]),
@@ -159,6 +163,10 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
 transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_q, prior_mean, prior_sd, nsets = 10, ...){
+  if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(write_stan_file(readLines(url(
+                                                       "https://raw.githubusercontent.com/michaeldymock25/CLM/main/inst/stan/conditional.stan"))))
+  if(!exists("logistic_mod")) logistic_mod <- cmdstan_model(write_stan_file(readLines(url(
+                                                 "https://raw.githubusercontent.com/michaeldymock25/CLM/main/inst/stan/logistic.stan"))))
   mod_data <- list(J = J,
                    `T` = length(follow_up_times),
                    n = n,
