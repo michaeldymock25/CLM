@@ -291,7 +291,7 @@ simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow
                                    model = mod, prior_mean = prior_mean, prior_sd = prior_sd, nsets = nsets, ...),
                               mc.cores = num_cores)
     end_time <- Sys.time()
-    run_times[model == mod, time := end_time - start_time]
+    run_time[model == mod, time := end_time - start_time]
     beta_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$beta_draws), idcol = "sim")
     pi_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$pi_draws), idcol = "sim")
   }
