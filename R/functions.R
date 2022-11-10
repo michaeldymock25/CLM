@@ -269,6 +269,7 @@ run_trial <- function(J, dat, follow_up_times, analysis_times, model = "conditio
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
 #          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
+#          num_cores = number of cores to run simulations in parallel
 #          ... = additional optional parameters for modelling
 # generates nsim data sets
 # sets up data.table to contain run times for each model
@@ -276,10 +277,11 @@ run_trial <- function(J, dat, follow_up_times, analysis_times, model = "conditio
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
 simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times,
-                            prior_mean, prior_sd, nsets = 10, ...){
+                            prior_mean, prior_sd, nsets = 10, num_cores, ...){
   models <- c("conditional", "logistic", "transition")
-  dat <- lapply(1:nsim, function(i) gen_data(n = n, J = J, p = p, recruit_period = recruit_period,
-                                             endpoint_time = endpoint_time, follow_up_times = follow_up_times))
+  dat <- parallel::mclapply(1:nsim, function(i) gen_data(n = n, J = J, p = p, recruit_period = recruit_period,
+                                                         endpoint_time = endpoint_time, follow_up_times = follow_up_times),
+                            mc.cores = num_cores)
   run_time <- data.table(model = models, time = NA_real_)
   pi_draws_list <- beta_draws_list <- list()
   for(mod in c("conditional", "logistic", "transition")){
