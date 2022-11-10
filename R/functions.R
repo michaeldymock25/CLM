@@ -85,7 +85,7 @@ conditional_analysis <- function(J, follow_up_times, n, y, prior_mean, prior_sd,
                    y = y,
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
-  drp <- utils::capture.output(fit <- stanmodels$conditional$sample(data = mod_data, refresh = 0, ...))
+  drp <- utils::capture.output(fit <- conditional_mod$sample(data = mod_data, refresh = 0, ...))
 
   beta_draws <- data.table(posterior::as_draws_matrix(fit$draws("beta")))
   colnames(beta_draws) <- paste("beta", as.vector(outer(1:length(follow_up_times), 1:J, FUN = "paste", sep = "_")), sep = "_")
@@ -128,7 +128,7 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
                    y = as.vector(dat[event == 1, table(arm)]),
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
-  drp <- utils::capture.output(fit <- stanmodels$logistic$sample(data = mod_data, refresh = 0, ...))
+  drp <- utils::capture.output(fit <- logistic_mod$sample(data = mod_data, refresh = 0, ...))
 
   beta_draws <- data.table(posterior::as_draws_matrix(fit$draws("beta")))
   colnames(beta_draws) <- paste("beta", 1:J, sep = "_")
@@ -173,7 +173,7 @@ transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_
                    y = y,
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
-  drp <- utils::capture.output(fit <- stanmodels$conditional$sample(data = mod_data, refresh = 0, chains = nsets, iter_sampling = 1))
+  drp <- utils::capture.output(fit <- conditional_mod$sample(data = mod_data, refresh = 0, chains = nsets, iter_sampling = 1))
 
   beta_draws <- data.table(posterior::as_draws_matrix(fit$draws("beta")))
   colnames(beta_draws) <- paste("beta", as.vector(outer(1:length(follow_up_times), 1:J, FUN = "paste", sep = "_")), sep = "_")
@@ -204,7 +204,7 @@ transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_
                                              y = pred[set == i]$y,
                                              prior_mean = prior_mean,
                                              prior_sd = prior_sd)
-                            drp <- utils::capture.output(fit <- stanmodels$logistic$sample(data = mod_data, refresh = 0, ...))
+                            drp <- utils::capture.output(fit <- logistic_mod$sample(data = mod_data, refresh = 0, ...))
                             data.table(posterior::as_draws_matrix(fit$draws("beta")))}))
   colnames(beta_draws) <- paste("beta", 1:J, sep = "_")
   pi_draws <- beta_draws[, lapply(.SD, plogis), .SDcols = paste("beta", 1:J, sep = "_")]
