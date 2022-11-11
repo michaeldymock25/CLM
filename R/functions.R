@@ -254,6 +254,7 @@ run_trial <- function(J, dat, follow_up_times, analysis_times, model = "conditio
   }
   beta_draws <- rbindlist(beta_draws_list, idcol = "analysis")
   pi_draws <- rbindlist(pi_draws_list, idcol = "analysis")
+  gc()
   return(list(beta_draws = beta_draws, pi_draws = pi_draws))
 }
 
