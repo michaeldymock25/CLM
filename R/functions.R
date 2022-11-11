@@ -124,8 +124,8 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
   if(!exists("logistic_mod")) logistic_mod <- cmdstan_model(write_stan_file(readLines(url(
                                                  "https://raw.githubusercontent.com/michaeldymock25/CLM/main/inst/stan/logistic.stan"))))
   mod_data <- list(J = J,
-                   n = as.vector(dat[, table(arm)]),
-                   y = as.vector(dat[event == 1, table(arm)]),
+                   n = dat[, .N, keyby = arm]$N,
+                   y = dat[, .(y = sum(event)), keyby = arm]$y,
                    prior_mean = prior_mean,
                    prior_sd = prior_sd)
   drp <- utils::capture.output(fit <- logistic_mod$sample(data = mod_data, refresh = 0, ...))
