@@ -243,7 +243,7 @@ run_trial <- function(J, dat, follow_up_times, analysis_times, model = "conditio
     }
     if(model == "transition"){
       tmp <- agg_conditional(J = J, dat = dat, follow_up_times = follow_up_times, analysis_time = analysis_times[t])
-      t_q <- dat[, lapply(follow_up_times, function(tt) analysis_times[t] - t_recruit > tt)][, .(t = sum(.SD)), by = seq_len(nrow(dat))]$t
+      t_q <- rowSums(dat[t_recruit <= analysis_times[t], lapply(follow_up_times, function(tt) analysis_times[t] - t_recruit >= tt)])
       dat_tmp <- dat[t_recruit <= analysis_times[t], c("arm", paste("day", follow_up_times)), with = FALSE]
       for(tt in 1:length(follow_up_times)) dat_tmp[t_q < tt, paste("day", follow_up_times[tt]) := NA]
       out <- transition_analysis(J = J, dat = dat_tmp, follow_up_times = follow_up_times, analysis_time = analysis_times[t],
