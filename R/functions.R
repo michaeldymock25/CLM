@@ -285,7 +285,7 @@ simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow
                             mc.cores = num_cores)
   run_time <- data.table(model = models, time = NA_real_)
   pi_draws_list <- beta_draws_list <- list()
-  for(mod in c("conditional", "logistic", "transition")){
+  for(mod in models){
     start_time <- Sys.time()
     out <- parallel::mclapply(dat, function(d)
                          run_trial(J = J, dat = d, follow_up_times = follow_up_times, analysis_times = analysis_times,
