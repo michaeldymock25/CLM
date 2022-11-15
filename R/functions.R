@@ -220,7 +220,7 @@ transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_
 #          pi_draws = data.table of posterior draws for pi
 # returns data.table with RMSE 
                                 
-RMSE <- function(true_p, pi_draws){
+RMSE <- function(p_true, pi_draws){
   rbindlist(lapply(1:length(p_true), function(j) pi_draws[variable == paste0("pi_", j), .(RMSE = sqrt(sum((sample - p_true[j])^2)))]), idcol = "variable")
 }  
                                 
@@ -283,6 +283,7 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "
 #          prior_sd = standard deviation for the prior distribution on beta
 #          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
 #          num_cores = number of cores to run simulations in parallel
+#          simplify_output = if TRUE, does not return draws to reduce output size (defaults to FALSE)                                                               
 #          ... = additional optional parameters for modelling
 # generates nsim data sets
 # sets up data.table to contain run times for each model
@@ -290,7 +291,7 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
 simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times,
-                            prior_mean, prior_sd, nsets = 10, num_cores, ...){
+                            prior_mean, prior_sd, nsets = 10, num_cores, simplify_output = FALSE, ...){
   models <- c("conditional", "logistic", "transition")
   dat <- parallel::mclapply(1:nsim, function(i) gen_data(n = n, J = J, p = p, recruit_period = recruit_period,
                                                          endpoint_time = endpoint_time, follow_up_times = follow_up_times),
@@ -313,5 +314,9 @@ simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow
   beta <- rbindlist(beta_draws_list, idcol = "model")
   pi <- rbindlist(pi_draws_list, idcol = "model")
   rmse <- rbindlist(rmse_list, idcol = "model")
-  return(list(beta = beta, pi = pi, run_time = run_time, rmse = rmse))
+  if(simplify_output){
+    return(list(run_time = run_time, rmse = rmse))
+  } else {
+    return(list(beta = beta, pi = pi, run_time = run_time, rmse = rmse))
+  }  
 }
