@@ -233,8 +233,8 @@ RMSE <- function(p_true, pi_draws){
        
 superiority <- function(pi_draws, thresholds, base_var, comp_var){
   rbindlist(lapply(thresholds, function(thr) 
-               data.table(supr = mean(odds(pi_draws[variable == comp_var]$sample)/odds(pi_draws[variable == base_var]$sample) < 1) >= thr),
-            idcol = "threshold"))
+               data.table(supr = mean(odds(pi_draws[variable == comp_var]$sample)/odds(pi_draws[variable == base_var]$sample) < 1) >= thr)),
+            idcol = "threshold")
 }
                     
 ## run_trial()
