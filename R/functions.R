@@ -216,20 +216,18 @@ transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_
 }
                                 
 ## RMSE()
-# requires true_p = true probabilities                                
+# requires p_true = true probabilities                                
 #          pi_draws = data.table of posterior draws for pi
 # returns data.table with RMSE 
                                 
 RMSE <- function(true_p, pi_draws){
-  J <- length(true_p)
-  
-  
+  rbindlist(lapply(1:length(p_true), function(j) pi_draws[variable == paste0("pi_", j), .(RMSE = sqrt(sum((sample - p_true[j])^2)))]), idcol = "variable")
 }  
                                 
 ## run_trial()
 # requires J = number of trial arms
 #          dat = dataset in the format produced by gen_data()
-#          true_p = true probabilities                                
+#          p_true = true probabilities                                
 #          follow_up_times = vector of follow up times in days (must include endpoint_time as the final follow up)
 #          analysis_times = vector of analysis times in days (first must be later than endpoint_time)
 #          model = one of "conditional", "logistic" or "transition" (defaults to "conditional")
@@ -238,11 +236,11 @@ RMSE <- function(true_p, pi_draws){
 #          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
 #          ... = additional optional parameters for modelling
 # for each analysis_time runs an analysis with the provided model
-# returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
+# returns beta parameter estimates (data.table), pi parameter estimates (data.table), RMSE (data.table)
 
-run_trial <- function(J, dat, true_p, follow_up_times, analysis_times, model = "conditional", prior_mean, prior_sd, nsets = 10, ...){
+run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "conditional", prior_mean, prior_sd, nsets = 10, ...){
   if(min(analysis_times) < last(follow_up_times)) stop("First analysis time must be later than the final follow up time")
-  pi_draws_list <- beta_draws_list <- list()
+  rmse_list <- pi_draws_list <- beta_draws_list <- list()
   for(t in 1:length(analysis_times)){
     cat("Running analysis", t, "\n")
     if(model == "conditional"){
@@ -263,12 +261,13 @@ run_trial <- function(J, dat, true_p, follow_up_times, analysis_times, model = "
     }
     beta_draws_list[[t]] <- out$beta_draws
     pi_draws_list[[t]] <- out$pi_draws
+    rmse_list[[t]] <- RMSE(p_true = p_true, pi_draws = out$pi_draws)
   }
   beta_draws <- rbindlist(beta_draws_list, idcol = "analysis")
   pi_draws <- rbindlist(pi_draws_list, idcol = "analysis")
-  RMSE <-                                                              
+  rmse <- rbindlist(rmse_list, idcol = "analysis")                                                              
   gc()
-  return(list(beta_draws = beta_draws, pi_draws = pi_draws, RMSE = RMSE))
+  return(list(beta_draws = beta_draws, pi_draws = pi_draws, rmse = rmse))
 }
 
 ## simulate_trials()
@@ -297,20 +296,22 @@ simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow
                                                          endpoint_time = endpoint_time, follow_up_times = follow_up_times),
                             mc.cores = num_cores)
   run_time <- data.table(model = models, time = NA_real_)
-  pi_draws_list <- beta_draws_list <- list()
+  rmse_list <- pi_draws_list <- beta_draws_list <- list()
   for(mod in models){
     start_time <- Sys.time()
     out <- parallel::mclapply(dat, function(d)
-                         run_trial(J = J, dat = d, true_p = p, follow_up_times = follow_up_times, analysis_times = analysis_times,
+                         run_trial(J = J, dat = d, p_true = p, follow_up_times = follow_up_times, analysis_times = analysis_times,
                                    model = mod, prior_mean = prior_mean, prior_sd = prior_sd, nsets = nsets, ...),
                               mc.cores = num_cores)
     end_time <- Sys.time()
     run_time[model == mod, time := end_time - start_time]
     beta_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$beta_draws), idcol = "sim")
     pi_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$pi_draws), idcol = "sim")
+    rmse_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$rmse), idcol = "sim")
   }
 
   beta <- rbindlist(beta_draws_list, idcol = "model")
   pi <- rbindlist(pi_draws_list, idcol = "model")
-  return(list(beta = beta, pi = pi, run_time = run_time))
+  rmse <- rbindlist(rmse_list, idcol = "model")
+  return(list(beta = beta, pi = pi, run_time = run_time, rmse = rmse))
 }
