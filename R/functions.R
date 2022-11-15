@@ -152,7 +152,7 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
 #          t_q = last follow up time point for each participant
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
-#          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
+#          nsets = if using the transition model, the number of predicted data sets to generate
 #          ... = additional optional parameters for modelling
 # sets up data required for conditional model
 # samples from conditional model (equal to the number of sets to be produced)
@@ -162,7 +162,7 @@ logistic_analysis <- function(J, dat, prior_mean, prior_sd, ...){
 # runs logistic model for each set of data and combines posterior distributions
 # returns beta parameter estimates (data.table), pi_t parameter estimates (data.table) and pi parameter estimates (data.table)
 
-transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_q, prior_mean, prior_sd, nsets = 10, ...){
+transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_q, prior_mean, prior_sd, nsets, ...){
   if(!exists("conditional_mod")) conditional_mod <- cmdstan_model(write_stan_file(readLines(url(
                                                        "https://raw.githubusercontent.com/michaeldymock25/CLM/main/inst/stan/conditional.stan"))))
   if(!exists("logistic_mod")) logistic_mod <- cmdstan_model(write_stan_file(readLines(url(
@@ -223,24 +223,40 @@ transition_analysis <- function(J, dat, follow_up_times, analysis_time, n, y, t_
 RMSE <- function(p_true, pi_draws){
   rbindlist(lapply(1:length(p_true), function(j) pi_draws[variable == paste0("pi_", j), .(RMSE = sqrt(sum((sample - p_true[j])^2)))]), idcol = "variable")
 }  
-                                
+                   
+## superiority()
+# requires pi_draws = data.table of posterior draws for pi
+#          thresholds = range of decision thresholds 
+#          base_var = variable name for base of comparision
+#          comp_var = variable name for to compare to base_var
+# returns data.table with superiority decision                   
+       
+superiority <- function(pi_draws, thresholds, base_var, comp_var){
+  rbindlist(lapply(thresholds, function(thr) 
+               data.table(supr = mean(odds(pi_draws[variable == comp_var]$sample)/odds(pi_draws[variable == base_var]$sample) < 1) >= thr)),
+            idcol = "threshold"))
+}
+                    
 ## run_trial()
 # requires J = number of trial arms
 #          dat = dataset in the format produced by gen_data()
 #          p_true = true probabilities                                
 #          follow_up_times = vector of follow up times in days (must include endpoint_time as the final follow up)
 #          analysis_times = vector of analysis times in days (first must be later than endpoint_time)
-#          model = one of "conditional", "logistic" or "transition" (defaults to "conditional")
+#          model = one of "conditional", "logistic" or "transition"
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
-#          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
+#          thresholds = range of decision thresholds                    
+#          nsets = if using the transition model, the number of predicted data sets to generate
+#          base_var = variable name for base of comparision
+#          comp_var = variable name for to compare to base_var                  
 #          ... = additional optional parameters for modelling
 # for each analysis_time runs an analysis with the provided model
-# returns beta parameter estimates (data.table), pi parameter estimates (data.table), RMSE (data.table)
+# returns beta parameter estimates (data.table), pi parameter estimates (data.table), rmse (data.table) and supr (data.table)
 
-run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "conditional", prior_mean, prior_sd, nsets = 10, ...){
+run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model, prior_mean, prior_sd, thresholds, nsets, base_var, comp_var, ...){
   if(min(analysis_times) < last(follow_up_times)) stop("First analysis time must be later than the final follow up time")
-  rmse_list <- pi_draws_list <- beta_draws_list <- list()
+  supr_list <- rmse_list <- pi_draws_list <- beta_draws_list <- list()
   for(t in 1:length(analysis_times)){
     cat("Running analysis", t, "\n")
     if(model == "conditional"){
@@ -262,12 +278,14 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "
     beta_draws_list[[t]] <- out$beta_draws
     pi_draws_list[[t]] <- out$pi_draws
     rmse_list[[t]] <- RMSE(p_true = p_true, pi_draws = out$pi_draws)
+    supr_list[[t]] <- superiority(pi_draws = out$pi_draws, thresholds = thresholds, base_var = base_var, comp_var = comp_var)
   }
   beta_draws <- rbindlist(beta_draws_list, idcol = "analysis")
   pi_draws <- rbindlist(pi_draws_list, idcol = "analysis")
-  rmse <- rbindlist(rmse_list, idcol = "analysis")                                                              
+  rmse <- rbindlist(rmse_list, idcol = "analysis") 
+  supr <- rbindlist(supr_list, idcol = "analysis")                                                              
   gc()
-  return(list(beta_draws = beta_draws, pi_draws = pi_draws, rmse = rmse))
+  return(list(beta_draws = beta_draws, pi_draws = pi_draws, rmse = rmse, supr = supr))
 }
 
 ## simulate_trials()
@@ -281,7 +299,10 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "
 #          analysis_times = vector of analysis times in days (first must be later than endpoint_time)
 #          prior_mean = mean for the prior distribution on beta
 #          prior_sd = standard deviation for the prior distribution on beta
-#          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)
+#          thresholds = range of decision thresholds
+#          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)             
+#          base_var = variable name for base of comparision (defaults to "pi_1")
+#          comp_var = variable name for to compare to base_var (defaults to "pi_2")
 #          num_cores = number of cores to run simulations in parallel
 #          simplify_output = if TRUE, does not return draws to reduce output size (defaults to FALSE)                                                               
 #          ... = additional optional parameters for modelling
@@ -290,33 +311,36 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model = "
 # for each data set runs a trial using each model as specified
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
-simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times,
-                            prior_mean, prior_sd, nsets = 10, num_cores, simplify_output = FALSE, ...){
+simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times, prior_mean, prior_sd, 
+                            thresholds, nsets = 10, base_var = "pi_1", comp_var = "pi_2", num_cores, simplify_output = FALSE, ...){
   models <- c("conditional", "logistic", "transition")
   dat <- parallel::mclapply(1:nsim, function(i) gen_data(n = n, J = J, p = p, recruit_period = recruit_period,
                                                          endpoint_time = endpoint_time, follow_up_times = follow_up_times),
                             mc.cores = num_cores)
   run_time <- data.table(model = models, time = NA_real_)
-  rmse_list <- pi_draws_list <- beta_draws_list <- list()
+  supr_list <- rmse_list <- pi_draws_list <- beta_draws_list <- list()
   for(mod in models){
     start_time <- Sys.time()
     out <- parallel::mclapply(dat, function(d)
                          run_trial(J = J, dat = d, p_true = p, follow_up_times = follow_up_times, analysis_times = analysis_times,
-                                   model = mod, prior_mean = prior_mean, prior_sd = prior_sd, nsets = nsets, ...),
+                                   model = mod, prior_mean = prior_mean, prior_sd = prior_sd, thresholds = thresholds, nsets = nsets,
+                                   base_var = base_var, comp_var = comp_var, ...),
                               mc.cores = num_cores)
     end_time <- Sys.time()
     run_time[model == mod, time := end_time - start_time]
     beta_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$beta_draws), idcol = "sim")
     pi_draws_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$pi_draws), idcol = "sim")
     rmse_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$rmse), idcol = "sim")
+    supr_list[[which(mod == models)]] <- rbindlist(lapply(out, function(x) x$supr), idcol = "sim")
   }
 
   beta <- rbindlist(beta_draws_list, idcol = "model")
   pi <- rbindlist(pi_draws_list, idcol = "model")
   rmse <- rbindlist(rmse_list, idcol = "model")
+  supr <- rbindlist(supr_list, idcol = "model")
   if(simplify_output){
-    return(list(run_time = run_time, rmse = rmse))
+    return(list(run_time = run_time, rmse = rmse, supr = supr))
   } else {
-    return(list(beta = beta, pi = pi, run_time = run_time, rmse = rmse))
+    return(list(beta = beta, pi = pi, run_time = run_time, rmse = rmse, supr = supr))
   }  
 }
