@@ -235,9 +235,9 @@ RMSE <- function(p_true, pi_draws){
 superiority <- function(pi_draws, thresholds, base_var, comp_var, dir = "greater"){
   OR_sample <- odds(pi_draws[variable == comp_var]$sample)/odds(pi_draws[variable == base_var]$sample)
   if(dir == "greater"){
-    rbindlist(lapply(thresholds, function(thr) data.table(supr = mean( > 1) >= thr)), idcol = "threshold")
+    rbindlist(lapply(thresholds, function(thr) data.table(supr = mean(OR_sample > 1) >= thr)), idcol = "threshold")
   } else if(dir == "lesser"){
-    rbindlist(lapply(thresholds, function(thr) data.table(supr = mean( < 1) >= thr)), idcol = "threshold")
+    rbindlist(lapply(thresholds, function(thr) data.table(supr = mean(OR_sample < 1) >= thr)), idcol = "threshold")
   } else {
     stop("dir must be 'greater' or 'lesser'")
   }
