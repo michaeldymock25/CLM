@@ -229,12 +229,18 @@ RMSE <- function(p_true, pi_draws){
 #          thresholds = range of decision thresholds 
 #          base_var = variable name for base of comparision
 #          comp_var = variable name for to compare to base_var
+#          dir = direction of comparison (defaults to greater)
 # returns data.table with superiority decision                   
        
-superiority <- function(pi_draws, thresholds, base_var, comp_var){
-  rbindlist(lapply(thresholds, function(thr) 
-               data.table(supr = mean(odds(pi_draws[variable == comp_var]$sample)/odds(pi_draws[variable == base_var]$sample) < 1) >= thr)),
-            idcol = "threshold")
+superiority <- function(pi_draws, thresholds, base_var, comp_var, dir = "greater"){
+  OR_sample <- odds(pi_draws[variable == comp_var]$sample)/odds(pi_draws[variable == base_var]$sample)
+  if(dir == "greater"){
+    rbindlist(lapply(thresholds, function(thr) data.table(supr = mean( > 1) >= thr)), idcol = "threshold")
+  } else if(dir == "lesser"){
+    rbindlist(lapply(thresholds, function(thr) data.table(supr = mean( < 1) >= thr)), idcol = "threshold")
+  } else {
+    stop("dir must be 'greater' or 'lesser'")
+  }
 }
                     
 ## run_trial()
