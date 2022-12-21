@@ -8,7 +8,7 @@ data{
 }
 
 parameters{
-  vector[J] beta[T];         // coefficients for follow up times and arms
+  array[T] vector[J] beta;   // coefficients for follow up times and arms
 }
 
 model{
