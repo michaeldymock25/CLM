@@ -329,7 +329,7 @@ simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow
     start_time <- Sys.time()
     out <- parallel::mclapply(dat, function(d)
                          run_trial(J = J, dat = d, p_true = p, follow_up_times = follow_up_times, analysis_times = analysis_times,
-                                   model = mod, prior_mean = prior_means[mod, prior_sd = prior_sds[mod], thresholds = thresholds, 
+                                   model = mod, prior_mean = prior_means[mod], prior_sd = prior_sds[mod], thresholds = thresholds, 
                                    nsets = nsets, base_var = base_var, comp_var = comp_var, ...),
                               mc.cores = num_cores)
     end_time <- Sys.time()
