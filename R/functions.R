@@ -303,8 +303,8 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model, pr
 #          endpoint_time = number of days between randomisation and the time the endpoint is collected#          J = number of trial arms
 #          follow_up_times = vector of follow up times in days (must include endpoint_time as the final follow up)
 #          analysis_times = vector of analysis times in days (first must be later than endpoint_time)
-#          prior_mean = mean for the prior distribution on beta
-#          prior_sd = standard deviation for the prior distribution on beta
+#          prior_means = means for the prior distribution on beta
+#          prior_sds = standard deviations for the prior distribution on beta
 #          thresholds = range of decision thresholds
 #          nsets = if using the transition model, the number of predicted data sets to generate (defaults to 10)             
 #          base_var = variable name for base of comparision (defaults to "pi_1")
@@ -317,7 +317,7 @@ run_trial <- function(J, dat, p_true, follow_up_times, analysis_times, model, pr
 # for each data set runs a trial using each model as specified
 # returns beta parameter estimates (data.table) and pi parameter estimates (data.table)
 
-simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times, prior_mean, prior_sd, 
+simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow_up_times, analysis_times, prior_means, prior_sds, 
                             thresholds, nsets = 10, base_var = "pi_1", comp_var = "pi_2", num_cores, simplify_output = FALSE, ...){
   models <- c("conditional", "logistic", "transition")
   dat <- parallel::mclapply(1:nsim, function(i) gen_data(n = n, J = J, p = p, recruit_period = recruit_period,
@@ -329,8 +329,8 @@ simulate_trials <- function(nsim, n, J, p, recruit_period, endpoint_time, follow
     start_time <- Sys.time()
     out <- parallel::mclapply(dat, function(d)
                          run_trial(J = J, dat = d, p_true = p, follow_up_times = follow_up_times, analysis_times = analysis_times,
-                                   model = mod, prior_mean = prior_mean, prior_sd = prior_sd, thresholds = thresholds, nsets = nsets,
-                                   base_var = base_var, comp_var = comp_var, ...),
+                                   model = mod, prior_mean = prior_means[mod, prior_sd = prior_sds[mod], thresholds = thresholds, 
+                                   nsets = nsets, base_var = base_var, comp_var = comp_var, ...),
                               mc.cores = num_cores)
     end_time <- Sys.time()
     tt <- end_time - start_time
