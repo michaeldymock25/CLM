@@ -10,7 +10,7 @@
 ### endpoint is severe COVID-19 disease within 6 months post randomisation
 ### two arms are control = flu vaccine; intervention = BCG vaccine
 ### assumed 4% of control group will reach the endpoint within 6 months
-### powered at 90% with 5% type one error with a trial sample size of 8,062 to detect OR = 2/3
+### powered at 90% with 5% type one error with a trial sample size of 8,062 to detect one third reduction
 ### assumed constant recruitment over 6 months and endpoint available immediately if reached
 ### single interim analysis with stopping rule for superiority occurs once 100 endpoints reached
 ### simple logistic model
@@ -40,9 +40,8 @@ endpoint_time <- 365.25/2                    ## time endpoint is measured
 follow_up_times <- round(365.25/6*c(1:3))    ## follow up every two months
 n <- 8062 	                                 ## maximum trial sample size
 events_at_interim <- 100                     ## events required for interim analysis
-OR_true <- 2/3                               ## true odds ratio
 p0 <- 0.04 			                             ## probability for control arm
-p1 <- inv_odds(OR_true*odds(p0))             ## probability for treatment arm
+p1 <- 2/3*0.04                               ## probability for intervention arm
 p_null <- c(p0, p0)                          ## vector of event probabilities for null scenario
 p_power <- c(p0, p1) 		                     ## vector of event probabilities for powered scenario
 prior_means <- c(conditional = qlogis(p0)/3, ## centre prior mean on control arm probability/3 as there are three follow up periods
