@@ -26,9 +26,9 @@ logistic_mod <- cmdstan_model(write_stan_file(readLines(url(
 
 ## define configurations to simulate
 
-cfg <- CJ(n = list(100, 1000),               ## trial sample sizes of 100 and 1000
+cfg <- CJ(n = list(1000, 10000),             ## trial sample sizes of 1000 and 10000
           pi_1 = list(0.05, 0.20, 0.50),     ## control arm probabilities of 0.05, 0.20 and 0.50
-          OR = list(1, 1.2, 1.5, 2),         ## odds ratios of 1, 1.2, 1.5 and 2
+          OR = list(1, 1.2, 1.5),            ## odds ratios of 1, 1.2 and 1.5
           sorted = FALSE)
 
 ## run the simulations for each configuration
@@ -42,7 +42,7 @@ for(z in 1:nrow(cfg)){
   prior_sds <- c(conditional = 1,                                           ## prior standard deviations of 1 (weakly informative)
                  logistic = 1,
                  transition = 1)
-  res <- simulate_trials(nsim = 200,                                        ## number of simulations to run
+  res <- simulate_trials(nsim = 10000,                                      ## number of simulations to run
                          n = unlist(cfg[z][["n"]]),                         ## trial sample size
                          J = 2,                                             ## number of trial arms
                          p = c(pi_1, pi_2),                                 ## true arm probabilities
@@ -53,9 +53,7 @@ for(z in 1:nrow(cfg)){
                          prior_means = prior_means,
                          prior_sds = prior_sds,
                          thresholds = seq(0.90, 0.995, by = 0.005),         ## range of decision thresholds for probability of superiority
-                         num_cores = 16,                                    ## number of cores to run in parallel
-                         chains = 8,                                        ## run 8 chains to assist convergence
+                         num_cores = 20,                                    ## number of cores to run in parallel
                          simplify_output = TRUE)                            ## do not need to store full posterior distributions
-
   saveRDS(list(cfg = cfg[z], res = res), paste0("sims_cfg_", formatC(z, width = 2, flag = "0"), ".rds"))
 }
